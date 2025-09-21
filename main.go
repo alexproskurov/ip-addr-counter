@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"net"
 	"os"
 	"runtime/pprof"
 
@@ -41,16 +40,25 @@ func UniqueIPs(fileName string) int {
 
 	bs := bitset.New(math.MaxUint32)
 	scanner := bufio.NewScanner(file)
-	
-	for scanner.Scan() {
-		line := scanner.Text()
-		ip := net.ParseIP(line).To4()
-		if ip == nil {
-			continue
-		}
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
 
-		v := binary.BigEndian.Uint32(ip.To4())
-		bs.Set(uint(v))
+	for scanner.Scan() {
+		ip := parseIPv4Bytes(scanner.Bytes())
+		bs.Set(uint(ip))
 	}
 	return int(bs.Count())
+}
+
+func parseIPv4Bytes(input []byte) uint32 {
+	var ip [4]byte
+	var ipOffset int
+	for _, c := range input {
+		if c == '.' {
+			ipOffset++
+			continue
+		}
+		ip[ipOffset] = ip[ipOffset]*10 + (c - '0')
+	}
+	return binary.BigEndian.Uint32(ip[:])
 }
