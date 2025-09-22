@@ -28,13 +28,17 @@ func main() {
 		return
 	}
 	filename := os.Args[1]
-	fmt.Println("Unique IP's: ", UniqueIPs(filename))
-}
-
-func UniqueIPs(fileName string) int {
-	file, err := os.Open(fileName)
+	count, err := UniqueIPs(filename)
 	if err != nil {
 		log.Fatal(err)
+	}
+	fmt.Printf("Unique IPs: %d\n", count)
+}
+
+func UniqueIPs(filePath string) (uint64, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return 0, err
 	}
 	defer file.Close()
 
@@ -47,7 +51,7 @@ func UniqueIPs(fileName string) int {
 		ip := parseIPv4Bytes(scanner.Bytes())
 		bs.Set(uint(ip))
 	}
-	return int(bs.Count())
+	return uint64(bs.Count()), nil
 }
 
 func parseIPv4Bytes(input []byte) uint32 {
