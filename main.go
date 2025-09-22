@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bufio"
-	"encoding/binary"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"runtime/pprof"
-
-	"github.com/bits-and-blooms/bitset"
+	"github.com/alexproskurov/ip-addr-counter/counter"
 )
 
 func main() {
@@ -23,46 +19,27 @@ func main() {
 	}
 	defer pprof.StopCPUProfile()
 
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <filename>")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: go run main.go <atomic|bitset> <filename>")
 		return
 	}
-	filename := os.Args[1]
-	count, err := UniqueIPs(filename)
+
+	method := os.Args[1]
+	filename := os.Args[2]
+
+	var c counter.Counter
+	switch method {
+	case "atomic":
+		c = &counter.AtomicCounter{}
+	case "bitset":
+		c = &counter.BitsetCounter{}
+	default:
+		log.Fatal("unknown method")
+	}
+
+	count, err := c.CountUniqueIPs(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Unique IPs: %d\n", count)
-}
-
-func UniqueIPs(filePath string) (uint64, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return 0, err
-	}
-	defer file.Close()
-
-	bs := bitset.New(math.MaxUint32)
-	scanner := bufio.NewScanner(file)
-	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 1024*1024)
-
-	for scanner.Scan() {
-		ip := parseIPv4Bytes(scanner.Bytes())
-		bs.Set(uint(ip))
-	}
-	return uint64(bs.Count()), nil
-}
-
-func parseIPv4Bytes(input []byte) uint32 {
-	var ip [4]byte
-	var ipOffset int
-	for _, c := range input {
-		if c == '.' {
-			ipOffset++
-			continue
-		}
-		ip[ipOffset] = ip[ipOffset]*10 + (c - '0')
-	}
-	return binary.BigEndian.Uint32(ip[:])
 }

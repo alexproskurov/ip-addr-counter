@@ -12,7 +12,11 @@ import (
 	"sync/atomic"
 )
 
-func CountUniqueIPs(filePath string) (uint64, error) {
+type AtomicCounter struct{}
+
+var _ Counter = (*AtomicCounter)(nil)
+
+func (c *AtomicCounter) CountUniqueIPs(filePath string) (uint64, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return 0, err
