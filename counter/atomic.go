@@ -2,7 +2,6 @@ package counter
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"math/bits"
@@ -95,29 +94,16 @@ func processChunkAtomic(data []byte, bitmap []uint32) {
 			line := data[start:i]
 			start = i + 1
 
-			ipv := parseIPv4Bytes3(line)
+			ipv := parseIPv4Bytes(line)
 			setBitAtomic(bitmap, ipv)
 		}
 	}
 
 	if start < len(data) {
 		line := data[start:]
-		ipv := parseIPv4Bytes3(line)
+		ipv := parseIPv4Bytes(line)
 		setBitAtomic(bitmap, ipv)
 	}
-}
-
-func parseIPv4Bytes3(b []byte) uint32 {
-	var ip [4]byte
-	var ipOffset int
-	for _, c := range b {
-		if c == '.' {
-			ipOffset++
-			continue
-		}
-		ip[ipOffset] = ip[ipOffset]*10 + (c - '0')
-	}
-	return binary.BigEndian.Uint32(ip[:])
 }
 
 func setBitAtomic(bitmap []uint32, ipv uint32) bool {
