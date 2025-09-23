@@ -7,7 +7,7 @@ import (
 	"github.com/alexproskurov/ip-addr-counter/counter"
 )
 
-func writeTempFile(t *testing.T, addresses []string, repeatTimes int) string {
+func writeTempFile(t testing.TB, addresses []string, repeatTimes int) string {
 	t.Helper()
 	tmpFile, err := os.CreateTemp("", "ips_test_*.txt")
 	if err != nil {
@@ -82,5 +82,29 @@ func TestIPCounters(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+var benchAddrs = []string{
+	"5.212.38.46", "79.174.235.110", "7.18.194.41",
+	"52.215.165.104", "15.161.241.93", "127.233.43.195",
+	"242.55.106.246", "230.42.235.27", "85.244.97.117",
+	"206.223.44.110", "104.122.33.7", "58.161.248.121",
+	"204.183.223.247", "151.225.183.115",
+}
+
+func BenchmarkCounters(b *testing.B) {
+	fileName := writeTempFile(b, benchAddrs, 1_000_000)
+	defer os.Remove(fileName)
+
+	for _, impl := range counterImpls {
+		b.Run(impl.name, func(b *testing.B) {
+			for b.Loop() {
+				_, err := impl.c.CountUniqueIPs(fileName)
+				if err != nil {
+					b.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
 	}
 }
