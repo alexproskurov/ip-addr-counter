@@ -22,7 +22,7 @@ func (c *AtomicCounter) CountUniqueIPs(filePath string) (uint64, error) {
 	}
 	defer file.Close()
 
-	bitmap := make([]uint32, 1<<27)
+	bitmap := make([]atomic.Uint32, 1<<27)
 	chunks := make(chan []byte, runtime.NumCPU()*2)
 
 	var wg sync.WaitGroup
@@ -44,8 +44,8 @@ func (c *AtomicCounter) CountUniqueIPs(filePath string) (uint64, error) {
 	wg.Wait()
 
 	var total uint64
-	for _, w := range bitmap {
-		total += uint64(bits.OnesCount32(w))
+	for i := range bitmap {
+		total += uint64(bits.OnesCount32(bitmap[i].Load()))
 	}
 	return total, nil
 }
@@ -87,7 +87,7 @@ func readChunksByLine(file *os.File, chunkSize int, out chan<- []byte) error {
 	return nil
 }
 
-func processChunkAtomic(data []byte, bitmap []uint32) {
+func processChunkAtomic(data []byte, bitmap []atomic.Uint32) {
 	start := 0
 	for i := range data {
 		if data[i] == '\n' {
@@ -106,16 +106,16 @@ func processChunkAtomic(data []byte, bitmap []uint32) {
 	}
 }
 
-func setBitAtomic(bitmap []uint32, ipv uint32) bool {
+func setBitAtomic(bitmap []atomic.Uint32, ipv uint32) bool {
 	wordIdx := int(ipv >> 5)
 	bit := uint32(1) << (ipv & 31)
 	// CAS loop
 	for {
-		old := atomic.LoadUint32(&bitmap[wordIdx])
+		old := bitmap[wordIdx].Load()
 		if old&bit != 0 {
 			return false
 		}
-		if atomic.CompareAndSwapUint32(&bitmap[wordIdx], old, old|bit) {
+		if bitmap[wordIdx].CompareAndSwap(old, old|bit) {
 			return true
 		}
 	}
