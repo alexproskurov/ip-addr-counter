@@ -65,3 +65,9 @@ This project was built to experiment with:
 * benchmarking real-world file processing performance.
 
 ---
+
+## Alternative implementations
+
+[@Kukushkasus's fork](https://github.com/Kukushkasus/ip-addr-counter) explores an alternative approach to IPv4 parsing and counting.
+
+Feel free to experiment with different IPv4 parsing and counting approaches, then share your results.
