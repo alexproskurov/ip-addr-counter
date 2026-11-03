@@ -68,6 +68,6 @@ This project was built to experiment with:
 
 ## Alternative implementations
 
-[@Kukushkasus's fork](https://github.com/Kukushkasus/ip-addr-counter) explores an alternative approach to IPv4 parsing and counting.
+[@Kukushkasus's optimized implementation](https://github.com/Kukushkasus/ipv4-counter-optimized) is an independently maintained variant that explores different approaches to IPv4 parsing, concurrency, and memory use.
 
 Feel free to experiment with different IPv4 parsing and counting approaches, then share your results.
